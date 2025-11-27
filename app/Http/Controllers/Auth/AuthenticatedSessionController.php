@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -41,12 +42,16 @@ class AuthenticatedSessionController extends Controller
     public function destroy(Request $request): JsonResponse
     {
         $user = $request->user();
+        $token = $request->user()->currentAccessToken();
         
-        // Revoke the current token
-        $request->user()->currentAccessToken()->delete();
-        
-        // Or revoke all tokens (uncomment if you want to revoke all tokens on logout)
-        // $user->tokens()->delete();
+        // Check if token is a PersonalAccessToken (stateless) or TransientToken (stateful)
+        if ($token instanceof PersonalAccessToken) {
+            // Stateless API: revoke the current token
+            $token->delete();
+        } else {
+            // Stateful API: revoke all tokens for the user
+            $user->tokens()->delete();
+        }
         
         return printJson(null, null, $this->lang);
     }
