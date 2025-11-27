@@ -40,13 +40,13 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): JsonResponse
     {
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-
-        $request->session()->regenerateToken();
-
         $user = $request->user();
-        $user->tokens()->delete();
+        
+        // Revoke the current token
+        $request->user()->currentAccessToken()->delete();
+        
+        // Or revoke all tokens (uncomment if you want to revoke all tokens on logout)
+        // $user->tokens()->delete();
         
         return printJson(null, null, $this->lang);
     }
