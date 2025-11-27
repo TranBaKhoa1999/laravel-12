@@ -49,7 +49,10 @@ class AuthenticatedSessionController extends Controller
             // Stateless API: revoke the current token
             $token->delete();
         } else {
-            // Stateful API: revoke all tokens for the user
+            // Stateful API: clear session and revoke all tokens
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
             $user->tokens()->delete();
         }
         
